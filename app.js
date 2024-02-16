@@ -2,7 +2,7 @@ let map;
 let jobLocations = [];
 let technicianLocation;
 let markers = [];
-const serverUrl =  'https://glittery-sprite-a2ff8d.netlify.app';
+//const serverUrl =  'https://glittery-sprite-a2ff8d.netlify.app/';
 
 
 function initMap() {
@@ -185,44 +185,44 @@ function displayRouteOnMap(route) {
 }
 
 
-function getCoordinates(address) {
-    return fetch(`${serverUrl}/get-api-key`)
-      .then(response => response.json())
-      .then(data => {
-        const apiKey = data.apiKey;
-        return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`)
-          .then(response => response.json())
-          .then(data => {
-            const location = data.results[0].geometry.location;
-            return { lat: location.lat, lng: location.lng };
-          })
-          .catch(error => {
-            console.error('Error fetching coordinates:', error);
-            throw error;
-          });
-      })
-      .catch(error => {
-        console.error('Error fetching API key:', error);
-        throw error;
-      });
-  }
-
 // function getCoordinates(address) {
-  
-//       return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w`)
-//         .then(response => response.json())
-//         .then(data => {
+//     return fetch(`${serverUrl}/get-api-key`)
+//       .then(response => response.json())
+//       .then(data => {
+//         const apiKey = data.apiKey;
+//         return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`)
+//           .then(response => response.json())
+//           .then(data => {
 //             const location = data.results[0].geometry.location;
 //             return { lat: location.lat, lng: location.lng };
-//         })
-//         .catch(error => {
+//           })
+//           .catch(error => {
 //             console.error('Error fetching coordinates:', error);
 //             throw error;
-//         });
+//           });
+//       })
+//       .catch(error => {
+//         console.error('Error fetching API key:', error);
+//         throw error;
+//       });
+//   }
+
+function getCoordinates(address) {
+  
+      return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w`)
+        .then(response => response.json())
+        .then(data => {
+            const location = data.results[0].geometry.location;
+            return { lat: location.lat, lng: location.lng };
+        })
+        .catch(error => {
+            console.error('Error fetching coordinates:', error);
+            throw error;
+        });
       
   
    
-// }
+}
 
 function saveLocationToDatabase(name, location,visited) {
     //  saving location to the MySQL database
@@ -254,16 +254,13 @@ function saveLocationToDatabase(name, location,visited) {
 }
 }
 
-fetch(`${serverUrl}/get-api-key`)
-  .then(response => response.json())
-  .then(data => {
-    const apiKey = data.apiKey;
+// fetch(`${serverUrl}/get-api-key`)
+//   .then(response => response.json())
+//   .then(data => {
+//     const apiKey = data.apiKey;
 
     const googleMapsScript = document.createElement('script');
-    // googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w&callback=initMap`;
-    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
-
-
+    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w&callback=initMap`;
     googleMapsScript.async = true;
     googleMapsScript.defer = true;
 
@@ -272,7 +269,7 @@ fetch(`${serverUrl}/get-api-key`)
     };
     document.head.appendChild(googleMapsScript);
 
-  })
-  .catch(error => console.error('Error fetching API key:', error));
+//   })
+//   .catch(error => console.error('Error fetching API key:', error));
   
 
