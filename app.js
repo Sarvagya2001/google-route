@@ -2,8 +2,6 @@ let map;
 let jobLocations = [];
 let technicianLocation;
 let markers = [];
-//const serverUrl =  'https://glittery-sprite-a2ff8d.netlify.app/';
-
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -11,7 +9,6 @@ function initMap() {
         zoom: 12
     });
 }
-
 function addAddress() {
     const addressInput = document.getElementById('addressInput').value;
 
@@ -41,9 +38,212 @@ function planRoute() {
         alert('Please add job locations and technician location first.');
         return;
     }
+    const allLocations = [technicianLocation.location, ...jobLocations.map(job => job.location)];
+    //const minimumTree = minimumSpanningTree(allLocations);
+    const minimumTree = findShortestPath(allLocations);
+    displayRouteOnMap(minimumTree);
+    //displayTreeOnMap(minimumTree);
+}
 
-    const optimizedRoute = tspRoutePlanning(jobLocations.map(job => job.location), technicianLocation.location);
-    displayRouteOnMap(optimizedRoute);
+function displayRouteOnMap(route) {
+
+    const directionsService = new google.maps.DirectionsService();
+
+    // object to display the route directions
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+      map: map,
+      suppressMarkers: true // Suppress default markers
+    });
+
+   //  request object with the route coordinates
+     const request = {
+       origin: route[0],
+       destination: route[route.length - 1],
+       waypoints: route.slice(1, -1).map(coord => ({ location: coord })),
+       travelMode: google.maps.TravelMode.DRIVING
+     };
+
+     // Calling  DirectionsService route method to calculate the route
+     directionsService.route(request, function(response, status) {
+       if (status === 'OK') {
+         // Displaying  route directions on the map
+         directionsRenderer.setDirections(response);
+         const route = response.routes[0];
+         drawArrows(route);
+       } else {
+         window.alert('Directions request failed due to ' + status);
+       }
+     });
+}
+
+function drawArrows(route) {
+    const path = route.overview_path;
+    const arrowSymbol = {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        fillColor: "blue",
+        fillOpacity: 0.8,
+        strokeWeight: 0,
+        scale: 4
+    };
+    const minDistanceBetweenArrows = 250; // Minimum distance between arrows in meters
+
+    for (let i = 0; i < path.length - 1; i++) {
+        const nextPoint = path[i + 1];
+        const currentPoint = path[i];
+        const distance = google.maps.geometry.spherical.computeDistanceBetween(
+            new google.maps.LatLng(currentPoint.lat(), currentPoint.lng()),
+            new google.maps.LatLng(nextPoint.lat(), nextPoint.lng())
+        );
+
+        if (distance >= minDistanceBetweenArrows) {
+            const line = new google.maps.Polyline({
+                path: [currentPoint, nextPoint],
+                icons: [{
+                    icon: arrowSymbol,
+                    offset: "100%"
+                }],
+                map: map
+            });
+        }
+    }
+}
+// Function to calculate distance between two points using Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
+}
+
+// Function to generate permutations of array elements
+function permute(arr) {
+    const result = [];
+
+    const permuteHelper = (arr, startIndex) => {
+        if (startIndex === arr.length - 1) {
+            result.push([...arr]);
+            return;
+        }
+
+        for (let i = startIndex; i < arr.length; i++) {
+            [arr[startIndex], arr[i]] = [arr[i], arr[startIndex]]; // swap
+            permuteHelper(arr, startIndex + 1);
+            [arr[startIndex], arr[i]] = [arr[i], arr[startIndex]]; // backtrack
+        }
+    };
+
+    permuteHelper(arr, 0);
+
+    return result;
+}
+
+// Function to find the shortest path using brute force
+function findShortestPath(locations) {
+    const n = locations.length;
+    const permutations = permute([...Array(n).keys()].slice(1)); // Generating permutations of locations excluding the start point
+    let shortestDistance = Infinity;
+    let shortestPath = [];
+
+    for (const perm of permutations) {
+        let distance = 0;
+        let currentLocationIndex = 0; // Start point index
+
+        for (const nextLocationIndex of perm) {
+           // const { lat: lat1, lng: lon1 } = locations[currentLocationIndex];
+            //const { lat: lat2, lng: lon2 } = locations[nextLocationIndex];
+            distance += calculateDistance(locations[currentLocationIndex], locations[nextLocationIndex]);
+            currentLocationIndex = nextLocationIndex;
+        }
+
+        //const { lat: lat1, lng: lon1 } = locations[currentLocationIndex];
+        //const { lat: lat2, lng: lon2 } = locations[0]; // Return to start point
+       // distance += calculateDistance(lat1, lon1, lat2, lon2);
+       distance += calculateDistance(locations[currentLocationIndex],  locations[0]);
+
+        if (distance < shortestDistance) {
+            shortestDistance = distance;
+            shortestPath = [0, ...perm]; // Adding start and end points
+        }
+    }
+
+    return shortestPath.map(index => locations[index]);
+}
+
+// Example usage
+// const locations = [
+//     { lat: 40.7128, lon: -74.0060 }, // New York (start)
+//     { lat: 34.0522, lon: -118.2437 }, // Los Angeles
+//     { lat: 41.8781, lon: -87.6298 }, // Chicago
+//     { lat: 29.7604, lon: -95.3698 }, // Houston
+//     { lat: 33.4484, lon: -112.0740 } // Phoenix
+// ];
+
+// const shortestPath = findShortestPath(locations);
+// console.log(shortestPath);
+
+
+function minimumSpanningTree(locations) {
+    const n = locations.length;
+    const allLocations = [...locations];
+    const visited = new Array(n).fill(false);
+    const parent = new Array(n).fill(-1); // To store the parent node of each vertex in the MST
+    const key = new Array(n).fill(Number.MAX_VALUE); // To store the weight of edges
+
+    key[0] = 0; // Start with the first node
+
+    for (let count = 0; count < n - 1; count++) {
+        // Pick the minimum key vertex from the set of vertices not yet included in MST
+        let minKey = Number.MAX_VALUE;
+        let minIndex = -1;
+        for (let v = 0; v < n; v++) {
+            if (!visited[v] && key[v] < minKey) {
+                minKey = key[v];
+                minIndex = v;
+            }
+        }
+
+        visited[minIndex] = true; // Include the picked vertex to MST
+
+        // Update key value and parent index of the adjacent vertices of the picked vertex
+        for (let v = 0; v < n; v++) {
+            const dist = calculateDistance(allLocations[minIndex], allLocations[v]);
+            if (!visited[v] && dist < key[v]) {
+                parent[v] = minIndex;
+                key[v] = dist;
+            }
+        }
+    }
+
+    // Construct the minimum spanning tree
+    const minimumTree = [];
+    for (let i = 1; i < n; i++) {
+        minimumTree.push([allLocations[parent[i]], allLocations[i]]);
+    }
+
+    return minimumTree;
+}
+
+function displayTreeOnMap(tree) {
+    // Display the minimum spanning tree on the map
+    const lineSymbol = {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+    };
+    tree.forEach(edge => {
+        const line = new google.maps.Polyline({
+            path: [edge[0], edge[1]],
+            icons: [{
+                icon: lineSymbol,
+                offset: '100%',
+            }],
+            map: map,
+        });
+    });
 }
 
 function markJobCompleted() {
@@ -84,192 +284,42 @@ function addMarker(location, label = '') {
     markers.push(marker);
 }
 
-
-
-function tspRoutePlanning(locations, startLocation) {
-    const n = locations.length;
-    const allLocations = [startLocation, ...locations];
-    const dp = new Array(1 << n).fill(null).map(() => new Array(n).fill(null));
-
-    function calculateDistance(point1, point2) {
-        const latDiff = point1.lat - point2.lat;
-        const lngDiff = point1.lng - point2.lng;
-        return Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-    }
-
-    function dijkstra(startNode) {
-        const distances = new Array(n+1).fill(Number.MAX_VALUE);
-        const visited = new Array(n+1).fill(false);
-        distances[startNode] = 0;
-
-        for (let i = 0; i < n ; i++) {
-            let minDistance = Number.MAX_VALUE;
-            let minIndex = -1;
-
-            // Finding closest unvisited node
-            for (let j = 0; j <= n; j++) {
-                if (!visited[j] && distances[j] < minDistance) {
-                    minDistance = distances[j];
-                    minIndex = j;
-                }
-            }
-
-            visited[minIndex] = true;
-
-            // Updating distance to neighbors through the current node
-            for (let j = 0; j <= n; j++) {
-                if (!visited[j]) {
-                    const distance = calculateDistance(allLocations[minIndex], allLocations[j]);
-                    if (distances[minIndex] + distance < distances[j]) {
-                        distances[j] = distances[minIndex] + distance;
-                    }
-                }
-            }
-        }
-
-        return distances;
-    }
-
-    const distances = dijkstra(0); //start location at index 0
-    const finalRoute = [];
-    const sortedIndexes = indexesInIncreasingOrder(distances);
-    for (let i = 0; i <= n; i++) {
-
-        finalRoute.push(allLocations[sortedIndexes[i]]);
-    }
-
-    return finalRoute;
+// Modify the calculateDistance function to suit your needs
+function calculateDistance(point1, point2) {
+    const latDiff = point1.lat - point2.lat;
+    const lngDiff = point1.lng - point2.lng;
+    // You may use a different formula to calculate distance based on your requirements
+    return Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
 }
-
-function indexesInIncreasingOrder(arr) {
-    // Create an array of indexes [0, 1, 2, ..., arr.length - 1]
-    const indexes = Array.from({ length: arr.length }, (_, index) => index);
-
-    indexes.sort((a, b) => arr[a] - arr[b]);
-
-    return indexes;
-}
-
-
-
-function displayRouteOnMap(route) {
-
-     const directionsService = new google.maps.DirectionsService();
-
-     // object to display the route directions
-     const directionsRenderer = new google.maps.DirectionsRenderer({
-       map: map,
-       suppressMarkers: true // Suppress default markers
-     });
-
-
- 
-
-    //  request object with the route coordinates
-      const request = {
-        origin: route[0],
-        destination: route[route.length - 1],
-        waypoints: route.slice(1, -1).map(coord => ({ location: coord })),
-        travelMode: google.maps.TravelMode.DRIVING
-      };
-
-      // Calling  DirectionsService route method to calculate the route
-      directionsService.route(request, function(response, status) {
-        if (status === 'OK') {
-          // Displaying  route directions on the map
-          directionsRenderer.setDirections(response);
-        } else {
-          window.alert('Directions request failed due to ' + status);
-        }
-      });
-}
-
-
-// function getCoordinates(address) {
-//     return fetch(`${serverUrl}/get-api-key`)
-//       .then(response => response.json())
-//       .then(data => {
-//         const apiKey = data.apiKey;
-//         return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`)
-//           .then(response => response.json())
-//           .then(data => {
-//             const location = data.results[0].geometry.location;
-//             return { lat: location.lat, lng: location.lng };
-//           })
-//           .catch(error => {
-//             console.error('Error fetching coordinates:', error);
-//             throw error;
-//           });
-//       })
-//       .catch(error => {
-//         console.error('Error fetching API key:', error);
-//         throw error;
-//       });
-//   }
 
 function getCoordinates(address) {
   
-      return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w`)
-        .then(response => response.json())
-        .then(data => {
-            const location = data.results[0].geometry.location;
-            return { lat: location.lat, lng: location.lng };
-        })
-        .catch(error => {
-            console.error('Error fetching coordinates:', error);
-            throw error;
-        });
-      
-  
-   
+    return fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w`)
+      .then(response => response.json())
+      .then(data => {
+          const location = data.results[0].geometry.location;
+          return { lat: location.lat, lng: location.lng };
+      })
+      .catch(error => {
+          console.error('Error fetching coordinates:', error);
+          throw error;
+      });
+    
+
+ 
 }
 
-function saveLocationToDatabase(name, location,visited) {
-    //  saving location to the MySQL database
-    // using Node.js server to handle the database operations
-    if(!visited){
-    fetch('/saveLocation', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address: name, location: location, visited }), // Adding 'visited' property with default value
-    })
-    .then(response => response.json())
-    .then(data => console.log(data))
-    .catch(error => console.error('Error saving location:', error));
-
-} else{
-
-    fetch('/updateVisited', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address: name, location: location, visited }), // Adding 'visited' property with default value
-    })
-    .then(response => response.json())
-    .then(data => console.log(data))
-    .catch(error => console.error('Error saving location:', error));
-}
+function saveLocationToDatabase(name, location, visited) {
+    // Saving location to the MySQL database or any other operation you want to perform
+    // Here you can handle the logic to save/update the location data
 }
 
-// fetch(`${serverUrl}/get-api-key`)
-//   .then(response => response.json())
-//   .then(data => {
-//     const apiKey = data.apiKey;
+const googleMapsScript = document.createElement('script');
+googleMapsScript.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w&callback=initMap';
+googleMapsScript.async = true;
+googleMapsScript.defer = true;
 
-    const googleMapsScript = document.createElement('script');
-    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBqe7URHq9O2PoUK6NKZT5fREVnmW_kc_w&callback=initMap`;
-    googleMapsScript.async = true;
-    googleMapsScript.defer = true;
-
-    googleMapsScript.onload = function () {
+googleMapsScript.onload = function () {
     initMap();
-    };
-    document.head.appendChild(googleMapsScript);
-
-//   })
-//   .catch(error => console.error('Error fetching API key:', error));
-  
-
+};
+document.head.appendChild(googleMapsScript);
