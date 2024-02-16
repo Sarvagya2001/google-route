@@ -3,11 +3,12 @@ const mysql = require('mysql2');
 const path = require('path');
 
 const app = express();
-const port = 3001;
+//const port = 3001;
 
  require('dotenv').config()
 
  const apiKey=process.env.KEY;
+ const port=process.env.PORT || 3001;
 
 
 // Serve static files from the main folder
