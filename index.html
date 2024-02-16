@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Optimization</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="form-container">
+
+            <label for="technicianAddressInput">Enter Technician Address:</label>
+            <input type="text" id="technicianAddressInput" placeholder="Enter technician address">
+            <button onclick="addTechnicianLocation()">Add Technician Location</button>
+
+            <label for="addressInput">Enter Address:</label>
+            <input type="text" id="addressInput" placeholder="Enter address">
+            <button onclick="addAddress()">Add Location</button>
+
+            <button onclick="planRoute()">Plan Route</button>
+            <button onclick="markJobCompleted()">Task Completed</button>
+        </div>
+
+        <div id="map"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html> 
+
+
