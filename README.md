@@ -8,7 +8,7 @@ This project is a web application designed to streamline and optimize the workfl
 
 - **Interactive Map Interface**: Technicians can easily choose their current location, and the application dynamically pins job locations on the map.
   
-- **Route Optimization**: The system calculates the shortest route to complete assigned tasks, ensuring optimal travel time for the technician.
+- **Route Optimization**: The system calculates the shortest route to complete assigned tasks and return back to its original location, ensuring optimal travel time for the technician.
 
 - **Task Completion Tracking**: Technicians can click on job pins to view details and mark tasks as complete. This information is stored in a MySQL database, providing real-time updates on job statuses.
 
