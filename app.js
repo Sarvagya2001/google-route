@@ -161,9 +161,7 @@ function findShortestPath(locations) {
             currentLocationIndex = nextLocationIndex;
         }
 
-        //const { lat: lat1, lng: lon1 } = locations[currentLocationIndex];
-        //const { lat: lat2, lng: lon2 } = locations[0]; // Return to start point
-       // distance += calculateDistance(lat1, lon1, lat2, lon2);
+      
        distance += calculateDistance(locations[currentLocationIndex],  locations[0]);
 
         if (distance < shortestDistance) {
@@ -174,18 +172,6 @@ function findShortestPath(locations) {
 
     return shortestPath.map(index => locations[index]);
 }
-
-// Example usage
-// const locations = [
-//     { lat: 40.7128, lon: -74.0060 }, // New York (start)
-//     { lat: 34.0522, lon: -118.2437 }, // Los Angeles
-//     { lat: 41.8781, lon: -87.6298 }, // Chicago
-//     { lat: 29.7604, lon: -95.3698 }, // Houston
-//     { lat: 33.4484, lon: -112.0740 } // Phoenix
-// ];
-
-// const shortestPath = findShortestPath(locations);
-// console.log(shortestPath);
 
 
 function minimumSpanningTree(locations) {
@@ -310,8 +296,7 @@ function getCoordinates(address) {
 }
 
 function saveLocationToDatabase(name, location, visited) {
-    // Saving location to the MySQL database or any other operation you want to perform
-    // Here you can handle the logic to save/update the location data
+   
 }
 
 const googleMapsScript = document.createElement('script');
