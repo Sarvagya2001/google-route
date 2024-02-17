@@ -295,8 +295,33 @@ function getCoordinates(address) {
  
 }
 
-function saveLocationToDatabase(name, location, visited) {
-   
+function saveLocationToDatabase(name, location,visited) {
+    
+    if(!visited){
+    fetch('/saveLocation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: name, location: location, visited }), // Add 'visited' property with default value
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error saving location:', error));
+
+} else{
+
+    fetch('/updateVisited', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: name, location: location, visited }), // Add 'visited' property with default value
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error saving location:', error));
+}
 }
 
 const googleMapsScript = document.createElement('script');
